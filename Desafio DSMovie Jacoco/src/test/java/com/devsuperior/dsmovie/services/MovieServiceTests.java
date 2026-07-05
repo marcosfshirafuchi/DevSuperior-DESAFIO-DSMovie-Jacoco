@@ -3,6 +3,7 @@ package com.devsuperior.dsmovie.services;
 import com.devsuperior.dsmovie.dto.MovieDTO;
 import com.devsuperior.dsmovie.entities.MovieEntity;
 import com.devsuperior.dsmovie.repositories.MovieRepository;
+import com.devsuperior.dsmovie.services.exceptions.DatabaseException;
 import com.devsuperior.dsmovie.services.exceptions.ResourceNotFoundException;
 import com.devsuperior.dsmovie.tests.MovieFactory;
 import jakarta.persistence.EntityNotFoundException;
@@ -14,6 +15,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -40,6 +42,7 @@ public class MovieServiceTests {
 	private long existingMovieId;
 	private long nonExistingMovieId;
 	private MovieDTO movieDTO;
+	private long dependentMovietId;
 
 	@BeforeEach
 	void setUp() throws Exception {
@@ -49,6 +52,7 @@ public class MovieServiceTests {
 		existingMovieId = 1L;
 		nonExistingMovieId = 2L;
 		movieDTO = MovieFactory.createMovieDTO();
+		dependentMovietId = 3L;
 
 		Mockito.lenient().when(repository.searchByTitle(any(), (Pageable) any())).thenReturn(page);
 		Mockito.lenient().when(repository.findById(existingMovieId)).thenReturn(Optional.of(movieEntity));
@@ -58,6 +62,8 @@ public class MovieServiceTests {
 		Mockito.lenient().when(repository.getReferenceById(nonExistingMovieId)).thenThrow(new EntityNotFoundException());
 		Mockito.lenient().when(repository.existsById(existingMovieId)).thenReturn(true);
 		Mockito.lenient().when(repository.existsById(nonExistingMovieId)).thenReturn(false);
+		Mockito.lenient().when(repository.existsById(dependentMovietId)).thenReturn(true);
+		Mockito.lenient().doThrow(DataIntegrityViolationException.class).when(repository).deleteById(dependentMovietId);
 	}
 	
 	@Test
@@ -127,5 +133,8 @@ public class MovieServiceTests {
 
 	@Test
 	public void deleteShouldThrowDatabaseExceptionWhenDependentId() {
+		Assertions.assertThrows(DatabaseException.class, ()->{
+			service.delete(dependentMovietId);
+		});
 	}
 }

@@ -12,6 +12,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
@@ -34,12 +35,16 @@ public class UserServiceTests {
 
 	private UserEntity userEntity;
 
+	private String nonExistingUsername;
+
 	@BeforeEach
-	void setUp(){
+	void setUp() throws Exception{
 		existingUsername = "maria@gmail.com";
 		userEntity = UserFactory.createUserEntity();
+		nonExistingUsername = "user@gmail.com";
 
 		Mockito.lenient().when(repository.findByUsername(existingUsername)).thenReturn(Optional.of(userEntity));
+		Mockito.lenient().when(repository.findByUsername(nonExistingUsername)).thenReturn(Optional.empty());
 	}
 
 	@Test
@@ -53,6 +58,10 @@ public class UserServiceTests {
 
 	@Test
 	public void authenticatedShouldThrowUsernameNotFoundExceptionWhenUserDoesNotExists() {
+		Mockito.lenient().doThrow(ClassCastException.class).when(userUtil).getLoggedUsername();
+		Assertions.assertThrows(UsernameNotFoundException.class, ()->{
+			service.authenticated();
+		});
 	}
 
 	@Test

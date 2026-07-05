@@ -1,7 +1,9 @@
 package com.devsuperior.dsmovie.services;
 
 import com.devsuperior.dsmovie.entities.UserEntity;
+import com.devsuperior.dsmovie.projections.UserDetailsProjection;
 import com.devsuperior.dsmovie.repositories.UserRepository;
+import com.devsuperior.dsmovie.tests.UserDetailsFactory;
 import com.devsuperior.dsmovie.tests.UserFactory;
 import com.devsuperior.dsmovie.utils.CustomUserUtil;
 import org.junit.jupiter.api.Assertions;
@@ -12,10 +14,12 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
+import java.util.List;
 import java.util.Optional;
 
 @ExtendWith({SpringExtension.class, MockitoExtension.class})
@@ -37,14 +41,18 @@ public class UserServiceTests {
 
 	private String nonExistingUsername;
 
+	private List<UserDetailsProjection> userDetails;
+
 	@BeforeEach
 	void setUp() throws Exception{
 		existingUsername = "maria@gmail.com";
 		userEntity = UserFactory.createUserEntity();
 		nonExistingUsername = "user@gmail.com";
+		userDetails = UserDetailsFactory.createCustomAdminClientUser(existingUsername);
 
 		Mockito.lenient().when(repository.findByUsername(existingUsername)).thenReturn(Optional.of(userEntity));
 		Mockito.lenient().when(repository.findByUsername(nonExistingUsername)).thenReturn(Optional.empty());
+		Mockito.lenient().when(repository.searchUserAndRolesByUsername(existingUsername)).thenReturn(userDetails);
 	}
 
 	@Test
@@ -66,6 +74,10 @@ public class UserServiceTests {
 
 	@Test
 	public void loadUserByUsernameShouldReturnUserDetailsWhenUserExists() {
+		UserDetails result = service.loadUserByUsername(existingUsername);
+
+		Assertions.assertNotNull(result);
+		Assertions.assertEquals(result.getUsername(), existingUsername);
 	}
 
 	@Test

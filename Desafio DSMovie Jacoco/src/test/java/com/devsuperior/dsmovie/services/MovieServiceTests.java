@@ -19,6 +19,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import java.util.List;
+import java.util.Optional;
 
 import static org.mockito.ArgumentMatchers.any;
 
@@ -34,14 +35,17 @@ public class MovieServiceTests {
 	private String existingTitle;
 	private MovieEntity movieEntity;
 	private PageImpl<MovieEntity> page;
+	private long existingMovieId;
 
 	@BeforeEach
 	void setUp() throws Exception {
 		existingTitle = "Test Movie";
 		movieEntity = MovieFactory.createMovieEntity();
 		page = new PageImpl<>(List.of((movieEntity)));
+		existingMovieId = 1L;
 
 		Mockito.lenient().when(repository.searchByTitle(any(), (Pageable) any())).thenReturn(page);
+		Mockito.lenient().when(repository.findById(existingMovieId)).thenReturn(Optional.of(movieEntity));
 	}
 	
 	@Test
@@ -57,6 +61,11 @@ public class MovieServiceTests {
 	
 	@Test
 	public void findByIdShouldReturnMovieDTOWhenIdExists() {
+		MovieDTO result = service.findById(existingMovieId);
+
+		Assertions.assertNotNull(result);
+		Assertions.assertEquals(result.getId(),existingMovieId);
+		Assertions.assertEquals(result.getTitle(),movieEntity.getTitle());
 	}
 
 	@Test

@@ -38,6 +38,7 @@ public class MovieServiceTests {
 	private PageImpl<MovieEntity> page;
 	private long existingMovieId;
 	private long nonExistingMovieId;
+	private MovieDTO movieDTO;
 
 	@BeforeEach
 	void setUp() throws Exception {
@@ -46,10 +47,12 @@ public class MovieServiceTests {
 		page = new PageImpl<>(List.of((movieEntity)));
 		existingMovieId = 1L;
 		nonExistingMovieId = 2L;
+		movieDTO = MovieFactory.createMovieDTO();
 
 		Mockito.lenient().when(repository.searchByTitle(any(), (Pageable) any())).thenReturn(page);
 		Mockito.lenient().when(repository.findById(existingMovieId)).thenReturn(Optional.of(movieEntity));
 		Mockito.lenient().when(repository.findById(nonExistingMovieId)).thenReturn(Optional.empty());
+		Mockito.lenient().when(repository.save(any())).thenReturn(movieEntity);
 	}
 	
 	@Test
@@ -81,6 +84,10 @@ public class MovieServiceTests {
 
 	@Test
 	public void insertShouldReturnMovieDTO() {
+		MovieDTO result = service.insert(new MovieDTO(movieEntity));
+
+		Assertions.assertNotNull(result);
+		Assertions.assertEquals(result.getId(), movieEntity.getId());
 	}
 
 	@Test

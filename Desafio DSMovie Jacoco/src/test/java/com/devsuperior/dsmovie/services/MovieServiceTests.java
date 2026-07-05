@@ -53,6 +53,7 @@ public class MovieServiceTests {
 		Mockito.lenient().when(repository.findById(existingMovieId)).thenReturn(Optional.of(movieEntity));
 		Mockito.lenient().when(repository.findById(nonExistingMovieId)).thenReturn(Optional.empty());
 		Mockito.lenient().when(repository.save(any())).thenReturn(movieEntity);
+		Mockito.lenient().when(repository.getReferenceById(existingMovieId)).thenReturn(movieEntity);
 	}
 	
 	@Test
@@ -92,6 +93,11 @@ public class MovieServiceTests {
 
 	@Test
 	public void updateShouldReturnMovieDTOWhenIdExists() {
+		MovieDTO result = service.update(existingMovieId,movieDTO);
+
+		Assertions.assertNotNull(result);
+		Assertions.assertEquals(result.getId(), movieDTO.getId());
+		Assertions.assertEquals(result.getTitle(), movieDTO.getTitle());
 	}
 
 	@Test

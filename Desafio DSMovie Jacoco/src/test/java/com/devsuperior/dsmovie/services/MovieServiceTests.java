@@ -3,6 +3,7 @@ package com.devsuperior.dsmovie.services;
 import com.devsuperior.dsmovie.dto.MovieDTO;
 import com.devsuperior.dsmovie.entities.MovieEntity;
 import com.devsuperior.dsmovie.repositories.MovieRepository;
+import com.devsuperior.dsmovie.services.exceptions.ResourceNotFoundException;
 import com.devsuperior.dsmovie.tests.MovieFactory;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -36,6 +37,7 @@ public class MovieServiceTests {
 	private MovieEntity movieEntity;
 	private PageImpl<MovieEntity> page;
 	private long existingMovieId;
+	private long nonExistingMovieId;
 
 	@BeforeEach
 	void setUp() throws Exception {
@@ -43,9 +45,11 @@ public class MovieServiceTests {
 		movieEntity = MovieFactory.createMovieEntity();
 		page = new PageImpl<>(List.of((movieEntity)));
 		existingMovieId = 1L;
+		nonExistingMovieId = 2L;
 
 		Mockito.lenient().when(repository.searchByTitle(any(), (Pageable) any())).thenReturn(page);
 		Mockito.lenient().when(repository.findById(existingMovieId)).thenReturn(Optional.of(movieEntity));
+		Mockito.lenient().when(repository.findById(nonExistingMovieId)).thenReturn(Optional.empty());
 	}
 	
 	@Test
@@ -70,6 +74,9 @@ public class MovieServiceTests {
 
 	@Test
 	public void findByIdShouldThrowResourceNotFoundExceptionWhenIdDoesNotExist() {
+		Assertions.assertThrows(ResourceNotFoundException.class, ()->{
+			service.findById(nonExistingMovieId);
+		});
 	}
 
 	@Test

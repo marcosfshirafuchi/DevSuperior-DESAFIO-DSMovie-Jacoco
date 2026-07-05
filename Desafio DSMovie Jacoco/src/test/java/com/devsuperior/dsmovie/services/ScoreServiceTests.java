@@ -7,9 +7,9 @@ import com.devsuperior.dsmovie.entities.ScoreEntity;
 import com.devsuperior.dsmovie.entities.UserEntity;
 import com.devsuperior.dsmovie.repositories.MovieRepository;
 import com.devsuperior.dsmovie.repositories.ScoreRepository;
+import com.devsuperior.dsmovie.services.exceptions.ResourceNotFoundException;
 import com.devsuperior.dsmovie.tests.MovieFactory;
 import com.devsuperior.dsmovie.tests.ScoreFactory;
-import com.devsuperior.dsmovie.tests.UserDetailsFactory;
 import com.devsuperior.dsmovie.tests.UserFactory;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -46,6 +46,7 @@ public class ScoreServiceTests {
 	private ScoreEntity scoreEntity;
 	private long existingMovieId;
 	private String existingTitle;
+	private long nonExistingMovieId;
 
 	@BeforeEach
 	void setUp(){
@@ -55,10 +56,12 @@ public class ScoreServiceTests {
 		scoreEntity = ScoreFactory.createScoreEntity();
 		existingMovieId = 1L;
 		existingTitle = "Test Movie";
+		nonExistingMovieId = 2L;
 
 		Mockito.lenient().when(movieRepository.findById(existingMovieId)).thenReturn(Optional.ofNullable(movieEntity));
 		Mockito.lenient().when(scoreRepository.saveAndFlush(any())).thenReturn(scoreEntity);
 		Mockito.lenient().when(movieRepository.save(any())).thenReturn(movieEntity);
+		Mockito.lenient().when(movieRepository.findById(nonExistingMovieId)).thenReturn(Optional.empty());
 	}
 
 	@Test
@@ -79,5 +82,11 @@ public class ScoreServiceTests {
 	
 	@Test
 	public void saveScoreShouldThrowResourceNotFoundExceptionWhenNonExistingMovieId() {
+		Mockito.lenient().when(userService.authenticated()).thenReturn(userEntity);
+		ScoreDTO dto = new ScoreDTO(nonExistingMovieId, 4.5);
+
+		Assertions.assertThrows(ResourceNotFoundException.class, ()->{
+			service.saveScore(dto);
+		});
 	}
 }
